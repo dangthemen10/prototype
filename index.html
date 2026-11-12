@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Yahoo! ネット募金 – AI Next-Gen Prototype v2</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700;800&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','Noto Sans JP','sans-serif']},colors:{yr:'#FF0033',yd:'#D9002B'}}}}</script>
+<style>
+:root{--bg:#f8fafc;--card:#fff;--tx:#0f172a;--mut:#64748b;--bd:#e2e8f0;--soft:#f1f5f9;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1020;--card:#151b2e;--tx:#e5e7eb;--mut:#94a3b8;--bd:#273049;--soft:#1d2540;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b1020;--card:#151b2e;--tx:#e5e7eb;--mut:#94a3b8;--bd:#273049;--soft:#1d2540;color-scheme:dark}
+body{background:var(--bg);color:var(--tx);font-family:Inter,'Noto Sans JP',sans-serif}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:1.5rem}
+.soft{background:var(--soft);border:1px solid var(--bd)}
+.mut{color:var(--mut)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--card);border-bottom:1px solid var(--bd)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:99px;background:var(--bd)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#FF0033;border:4px solid #fff;box-shadow:0 4px 12px rgba(255,0,51,.4);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#FF0033;border:4px solid #fff;cursor:pointer}
+.ring{background:linear-gradient(135deg,#FF0033,#FF7A00 50%,#FFD100);padding:3px}.ring.v{background:#94a3b8}
+.nos::-webkit-scrollbar{display:none}.nos{scrollbar-width:none}
+@keyframes pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}.pop{animation:pop .2s ease-out}
+@keyframes fl{50%{transform:translateY(-4px)}}.fl{animation:fl 3s ease-in-out infinite}
+.tg{width:44px;height:24px;border-radius:99px;background:#64748b;position:relative;transition:.2s;flex-shrink:0;cursor:pointer;border:0}
+.tg::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.tg.on{background:#FF0033}.tg.on::after{transform:translateX(20px)}
+button{cursor:pointer}
+</style>
+</head>
+<body class="antialiased pb-16">
+<header>
+ <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
+  <a href="#" class="flex items-center gap-1.5">
+   <span class="bg-yr text-white font-extrabold text-lg px-2.5 py-0.5 rounded-lg">Yahoo!</span>
+   <span class="leading-none"><b class="text-sm block">ネット募金</b><span class="text-[10px] mut">AI Impact Platform</span></span>
+  </a>
+  <div class="flex items-center gap-2">
+   <button onclick="resetDemo()" class="hidden sm:block text-[11px] font-semibold px-2.5 py-1.5 rounded-full soft mut" title="Xóa dữ liệu demo">↺ Reset demo</button>
+   <button onclick="toggleLang()" class="text-xs font-semibold px-3 py-1.5 rounded-full soft" id="langBtn">VI</button>
+   <button onclick="go('passport')" class="flex items-center gap-1.5 bg-rose-100 text-yd px-3 py-1.5 rounded-full text-xs font-bold">💮 <span class="hidden sm:inline" data-i="passShort">Hộ chiếu</span><span id="hStamp" class="bg-yr text-white px-1.5 rounded-full">0</span></button>
+   <div class="flex items-center gap-2 pl-2 border-l" style="border-color:var(--bd)">
+    <div class="text-right hidden sm:block"><div class="text-xs font-bold">Kenji Sato</div><div class="text-[11px] mut">● PayPay đã liên kết</div></div>
+    <div class="w-9 h-9 rounded-full bg-slate-700 text-white font-bold text-xs flex items-center justify-center">KS</div>
+   </div>
+  </div>
+ </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 pt-5 space-y-6">
+ <!-- Radar -->
+ <section class="rounded-2xl p-4 sm:p-5 text-white bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-slate-700">
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+   <div class="max-w-2xl w-full space-y-1.5">
+    <div class="flex flex-wrap items-center gap-2">
+     <span class="bg-yr text-[11px] font-bold px-2.5 py-0.5 rounded-full animate-pulse">● Yahoo! Disaster AI Radar</span>
+     <span class="text-xs text-slate-300" id="ticker">Đang kết nối dữ liệu khí tượng…</span>
+    </div>
+    <h2 class="font-bold text-base sm:text-lg" data-i="radar" id="radarTitle">[Khẩn cấp] Hỗ trợ tái thiết sau mưa lớn tại Ishikawa & Noto</h2>
+    <div class="flex justify-between text-xs"><span class="text-amber-300 font-semibold" id="radarMs"></span><span class="font-mono text-slate-300" id="radarPct"></span></div>
+    <div class="h-2.5 bg-slate-700 rounded-full overflow-hidden"><div id="radarBar" class="h-full bg-gradient-to-r from-amber-400 to-yr transition-all duration-700"></div></div>
+   </div>
+   <button onclick="openDonate('Cứu trợ khẩn cấp mưa lớn Ishikawa & Noto','disaster',1000,'p1')" class="bg-yr hover:bg-yd text-white font-bold text-sm px-5 py-3 rounded-xl shrink-0 active:scale-95 transition">Góp khẩn cấp ¥1,000 →</button>
+  </div>
+ </section>
+
+ <!-- Hero -->
+ <section class="grid lg:grid-cols-12 gap-5">
+  <div class="lg:col-span-7 card p-6 sm:p-7 flex flex-col justify-between">
+   <div>
+    <span class="inline-block text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full mb-3" id="streak"></span>
+    <h1 class="text-2xl sm:text-3xl font-extrabold" data-i="welcome">おかえりなさい、Kenji さん</h1>
+    <p class="mut text-sm mt-2" data-i="sub">Những đóng góp nhỏ của bạn đã tạo nên thay đổi thực tế:</p>
+   </div>
+   <div class="grid grid-cols-4 gap-2 mt-6 pt-5 border-t" style="border-color:var(--bd)">
+    <div class="soft rounded-2xl p-3"><div class="text-xl font-extrabold" id="sMeal">0</div><div class="text-[11px] mut">🍱 Bữa ăn</div></div>
+    <div class="soft rounded-2xl p-3"><div class="text-xl font-extrabold" id="sTree">0</div><div class="text-[11px] mut">🌲 Cây trồng</div></div>
+    <div class="soft rounded-2xl p-3"><div class="text-xl font-extrabold" id="sBag">0</div><div class="text-[11px] mut">⛺ Túi cứu trợ</div></div>
+    <div class="soft rounded-2xl p-3"><div class="text-xl font-extrabold text-yr" id="sYen">¥0</div><div class="text-[11px] mut">❤️ Tổng góp</div></div>
+   </div>
+  </div>
+  <div class="lg:col-span-5 rounded-3xl p-6 sm:p-7 border-2 border-yr/30 bg-gradient-to-br from-rose-50 via-white to-amber-50 text-slate-900 flex flex-col justify-between gap-4">
+   <div>
+    <div class="flex justify-between items-center mb-3">
+     <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-lg">⏳ <span id="cd">--</span></span>
+     <span class="flex gap-1"><b class="text-[11px] bg-blue-700 text-yellow-300 px-2 py-0.5 rounded">V POINT</b><b class="text-[11px] bg-yr text-white px-2 py-0.5 rounded">PayPay</b></span>
+    </div>
+    <h2 class="text-lg sm:text-xl font-extrabold" data-i="pt">Đừng để điểm thưởng lãng phí!</h2>
+    <p class="text-sm text-slate-600 mt-1" id="ptDesc"></p>
+   </div>
+   <div class="space-y-3">
+    <div class="bg-white rounded-2xl p-3.5 border border-slate-200 flex justify-between items-center">
+     <div><div class="text-[11px] text-slate-500">Điểm khả dụng</div><div class="text-2xl font-extrabold" id="ptVal"></div></div>
+     <div class="text-3xl fl">🎁</div>
+    </div>
+    <button id="sweepBtn" onclick="sweep()" class="w-full bg-yr hover:bg-yd text-white font-extrabold py-3.5 rounded-2xl shadow-lg transition active:scale-[.98]"></button>
+    <p class="text-[11px] text-center text-slate-500">Không cần nhập thẻ • Nhận tem Goshuin vào Hộ chiếu</p>
+   </div>
+  </div>
+ </section>
+
+ <!-- Stories -->
+ <section class="card p-5">
+  <div class="flex items-center gap-2 mb-1"><h2 class="font-extrabold text-lg" data-i="stories">Cập nhật từ quỹ bạn đã góp</h2><span class="text-[11px] font-bold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">✨ AI Impact Story</span></div>
+  <p class="text-xs mut mb-4">AI tổng hợp ảnh & báo cáo thực địa từ các NPO • Vòng màu = chưa xem</p>
+  <div class="flex gap-5 overflow-x-auto nos pb-2 pt-3 px-2" id="stories"></div>
+ </section>
+
+ <!-- Simulator -->
+ <section class="card p-6 sm:p-8">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
+   <div><span class="inline-block text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full mb-2">🤖 AI Impact Simulator</span>
+    <h2 class="text-xl sm:text-2xl font-extrabold" data-i="sim">Số tiền của bạn sẽ biến thành điều gì?</h2></div>
+   <div class="flex gap-1 soft p-1 rounded-xl self-start" id="payPills"></div>
+  </div>
+  <div class="flex gap-2 overflow-x-auto nos mb-5" id="simCats"></div>
+  <div class="grid lg:grid-cols-2 gap-6">
+   <div class="soft rounded-2xl p-5 space-y-4">
+    <div class="flex justify-between items-baseline"><span class="text-xs font-bold uppercase mut">Mức quyên góp</span>
+     <div class="text-right"><div id="simAmt" class="text-4xl font-extrabold text-yr"></div><div class="text-xs mut" id="simPay"></div></div></div>
+    <input type="range" id="slider" min="100" max="10000" step="100" value="1500" oninput="sim(+this.value)">
+    <div class="grid grid-cols-4 gap-2" id="presets"></div>
+   </div>
+   <div class="rounded-2xl p-5 flex flex-col justify-between gap-4 border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-amber-50 text-slate-900">
+    <div class="flex gap-4">
+     <div id="simIc" class="w-16 h-16 rounded-2xl bg-white border border-rose-100 flex items-center justify-center text-4xl shrink-0 transition-transform"></div>
+     <div><span class="text-[11px] font-bold text-yr uppercase">Tác động ước tính bởi AI</span>
+      <h3 id="simT" class="text-lg font-extrabold leading-snug"></h3><p id="simD" class="text-sm text-slate-600 mt-1"></p></div>
+    </div>
+    <button onclick="simDonate()" class="w-full bg-yr hover:bg-yd text-white font-extrabold py-3.5 rounded-xl transition active:scale-[.98]">Quyên góp ngay <span id="simBtn"></span></button>
+   </div>
+  </div>
+ </section>
+
+ <!-- Projects -->
+ <section class="space-y-4">
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+   <div><span class="text-xs font-extrabold bg-slate-900 text-white px-2.5 py-0.5 rounded-md">AI MATCHING</span><span class="text-xs mut ml-2">Dựa trên khu vực & lịch sử góp của bạn</span>
+    <h2 class="text-xl sm:text-2xl font-extrabold mt-1" data-i="pick">Dự án AI chọn riêng cho bạn</h2></div>
+   <div class="flex gap-2 overflow-x-auto nos pb-1" id="filters"></div>
+  </div>
+  <div id="grid" class="grid md:grid-cols-2 gap-5"></div>
+ </section>
+
+ <!-- Timeline -->
+ <section class="card p-6 sm:p-8" id="timeline">
+  <h2 class="text-xl sm:text-2xl font-extrabold" data-i="tl">Hành trình đồng tiền của bạn</h2>
+  <p class="text-xs mut mt-1 mb-5">My Impact Timeline • Khoản góp mới sẽ tự cập nhật trạng thái sau vài giây (demo)</p>
+  <ol id="tlList" class="space-y-4"></ol>
+ </section>
+
+ <!-- Passport -->
+ <section id="passport" class="rounded-3xl p-6 sm:p-8 text-white bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700">
+  <h2 class="text-xl sm:text-2xl font-extrabold"><span data-i="pass">Bộ sưu tập Tem Goshuin</span> (<span id="pTot">0</span>/6)</h2>
+  <p class="text-sm text-slate-300 mt-1 mb-5" id="pSub"></p>
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6" id="stamps"></div>
+  <div class="grid md:grid-cols-2 gap-4">
+   <div class="bg-white/10 border border-white/15 rounded-2xl p-4 space-y-3">
+    <div class="flex justify-between gap-4 items-center"><div><div class="text-sm font-bold text-amber-300">⚡ Góp tự động khi có thiên tai</div>
+     <div class="text-[11px] text-slate-300">Tự góp ¥500 khi AI cảnh báo động đất/bão lớn (tối đa 1 lần/tháng)</div></div>
+     <button class="tg" id="tgDis" onclick="flip('autoD')" aria-label="Bật tắt góp tự động"></button></div>
+    <button onclick="quake()" class="text-xs font-bold bg-white/15 hover:bg-white/25 px-3 py-2 rounded-lg">🌋 Giả lập cảnh báo động đất M5.8</button>
+   </div>
+   <div class="bg-white/10 border border-white/15 rounded-2xl p-4 space-y-3">
+    <div class="flex justify-between gap-4 items-center"><div><div class="text-sm font-bold text-amber-300">🪙 Làm tròn tự động (Auto-Roundup)</div>
+     <div class="text-[11px] text-slate-300">Góp phần lẻ lên ¥100 mỗi lần thanh toán PayPay. Quỹ lẻ: <b id="pool">¥0</b> / ¥100</div></div>
+     <button class="tg" id="tgRound" onclick="flip('round')" aria-label="Bật tắt làm tròn"></button></div>
+    <button onclick="pay()" class="text-xs font-bold bg-white/15 hover:bg-white/25 px-3 py-2 rounded-lg">🛒 Giả lập thanh toán PayPay</button>
+   </div>
+  </div>
+ </section>
+</main>
+
+<!-- Story modal -->
+<div id="sm" class="fixed inset-0 z-50 hidden bg-black/80 items-center justify-center p-4" onclick="if(event.target===this)closeStory()">
+ <div class="bg-slate-900 text-white border border-slate-700 w-full max-w-md max-h-[92vh] rounded-3xl overflow-y-auto pop relative">
+  <div class="absolute top-0 inset-x-0 z-10 p-3 bg-gradient-to-b from-black/70 to-transparent">
+   <div class="flex gap-1 mb-3" id="seg"></div>
+   <div class="flex justify-between items-center">
+    <div class="flex items-center gap-2"><span id="sEm" class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-lg"></span><div><div id="sOrg" class="text-xs font-bold"></div><div id="sDate" class="text-[11px] text-slate-300"></div></div></div>
+    <button onclick="closeStory()" class="w-8 h-8 rounded-full bg-white/15" aria-label="Đóng">✕</button>
+   </div>
+  </div>
+  <div id="sVis" class="min-h-[22rem] flex flex-col items-center justify-center px-8 pt-28 pb-8 text-center relative">
+   <button onclick="stepStory(-1)" class="absolute left-2 top-1/2 w-9 h-9 rounded-full bg-white/10" aria-label="Trước">‹</button>
+   <button onclick="stepStory(1)" class="absolute right-2 top-1/2 w-9 h-9 rounded-full bg-white/10" aria-label="Sau">›</button>
+   <div id="sBig" class="text-7xl mb-4"></div>
+   <span class="bg-amber-400 text-slate-900 text-[11px] font-extrabold px-3 py-1 rounded-full mb-3">Tác động từ khoản góp của bạn</span>
+   <h3 id="sHead" class="text-xl font-extrabold leading-snug"></h3>
+  </div>
+  <div class="p-5 space-y-4">
+   <p id="sCap" class="text-sm text-slate-300"></p>
+   <div class="flex gap-2"><button onclick="storyDonate()" class="flex-1 bg-yr hover:bg-yd font-bold text-sm py-3 rounded-xl">Tiếp tục ủng hộ quỹ này ¥500</button><button onclick="closeStory()" class="px-4 py-3 rounded-xl bg-slate-800 text-xs font-bold">Đóng</button></div>
+  </div>
+ </div>
+</div>
+
+<!-- Donate modal -->
+<div id="dm" class="fixed inset-0 z-50 hidden bg-black/60 items-center justify-center p-4" onclick="if(event.target===this)closeDonate()">
+ <div class="card w-full max-w-md p-6 pop max-h-[92vh] overflow-y-auto">
+  <div id="dForm" class="space-y-4">
+   <div class="flex justify-between items-center"><span class="text-xs font-extrabold bg-rose-100 text-yd px-3 py-1 rounded-full">Xác nhận quyên góp</span><button onclick="closeDonate()" class="w-8 h-8 rounded-full soft" aria-label="Đóng">✕</button></div>
+   <div><div class="text-xs mut">Dự án nhận hỗ trợ</div><h3 id="dTitle" class="font-extrabold text-lg leading-snug"></h3></div>
+   <div class="soft rounded-2xl p-4 space-y-3">
+    <div class="flex justify-between items-center"><span class="text-xs font-bold mut">Số tiền (¥)</span>
+     <input id="dAmt" type="number" min="100" step="100" class="w-28 text-right text-xl font-extrabold text-yr rounded-lg px-2 py-1 border" style="background:var(--card);border-color:var(--bd)" oninput="dSet(+this.value||0)"></div>
+    <div class="grid grid-cols-4 gap-2" id="dPre"></div>
+    <div class="text-xs font-semibold text-emerald-600" id="dPrev"></div>
+   </div>
+   <div><div class="text-xs mut mb-1.5">Phương thức thanh toán</div><div class="flex gap-1 soft p-1 rounded-xl" id="dPay"></div></div>
+   <label class="flex items-start gap-3 text-sm soft rounded-2xl p-3 cursor-pointer"><input type="checkbox" id="dMon" class="mt-1 accent-red-600">
+    <span><b>Biến thành quyên góp hàng tháng</b><br><span class="text-xs mut">Hủy bất cứ lúc nào • Nhận Impact Card mỗi tháng</span></span></label>
+   <button id="dGo" onclick="dConfirm()" class="w-full bg-yr hover:bg-yd text-white font-extrabold py-3.5 rounded-2xl shadow-lg transition active:scale-[.98]">Hoàn tất quyên góp</button>
+  </div>
+  <div id="dOk" class="hidden text-center space-y-4">
+   <div class="text-6xl">🎉</div>
+   <h3 class="text-xl font-extrabold" id="okT"></h3>
+   <p class="text-sm mut" id="okD"></p>
+   <div class="rounded-2xl p-3 text-sm font-semibold bg-amber-100 text-amber-900" id="okS"></div>
+   <div class="soft rounded-2xl p-3 text-left text-sm"><div class="text-[11px] mut mb-1">✨ AI gợi ý tiếp theo</div><div id="okN" class="font-bold"></div><button id="okNb" class="mt-2 text-xs font-bold text-yr">Xem dự án →</button></div>
+   <div class="flex gap-2"><button onclick="shareIt()" class="flex-1 soft py-3 rounded-xl text-sm font-bold">🔗 Chia sẻ</button><button onclick="closeDonate();go('timeline')" class="flex-1 bg-yr text-white py-3 rounded-xl text-sm font-bold">Xem hành trình</button></div>
+  </div>
+ </div>
+</div>
+<div id="toasts" class="fixed bottom-5 right-0 left-0 sm:left-auto z-[60] flex flex-col gap-2 sm:max-w-sm w-full px-4 pointer-events-none"></div>
+
+<script>
+const $=i=>document.getElementById(i),yen=n=>'¥'+Math.round(n).toLocaleString('ja-JP');
+const CATS={
+ disaster:{n:'Thiên tai',jp:'災害支援',ic:'⛩️',pill:'🚨 Thiên tai',per:500,u:'túi cứu trợ',e:'⛺',d:'Mỗi túi gồm chăn giữ nhiệt, đèn pin mặt trời, nước lọc dùng 7 ngày.',pr:'Xe tiếp tế đã đến điểm sơ tán, ảnh GPS khớp báo cáo.'},
+ children:{n:'Trẻ em',jp:'こども支援',ic:'🍙',pill:'🎒 Trẻ em',per:300,u:'bữa ăn nóng',e:'🍱',d:'Chuyển thẳng đến bếp ăn cộng đồng Kodomo Shokudo đã được kiểm toán.',pr:'AI đối chiếu hóa đơn rau sạch với báo cáo tháng, khớp 100%.'},
+ animals:{n:'Thú cưng',jp:'動物愛護',ic:'🐾',pill:'🐾 Động vật',per:500,u:'suất chăm sóc thú',e:'🐕',d:'Gồm thức ăn, tiêm phòng và chỗ ở tạm cho thú bị bỏ rơi.',pr:'12 thú cưng đã được tiêm phòng, ảnh trước/sau được xác minh.'},
+ environment:{n:'Rừng xanh',jp:'環境保全',ic:'🌲',pill:'🌲 Môi trường',per:500,u:'cây giống',e:'🌳',d:'Mỗi cây gắn mã GPS để theo dõi sinh trưởng trên Timeline.',pr:'Ảnh vệ tinh xác nhận tỷ lệ sống của cây đạt 96%.'},
+ medical:{n:'Y tế',jp:'医療福祉',ic:'🩺',pill:'🩺 Y tế',per:1000,u:'bộ thuốc & khám',e:'💊',d:'Cung cấp thuốc thiết yếu và khám lưu động cho người cao tuổi.',pr:'Đội y tế lưu động đã khám cho 38 người tại điểm sơ tán.'},
+ culture:{n:'Di sản',jp:'文化継承',ic:'🏮',pill:'🏮 Văn hóa',per:1000,u:'giờ trùng tu',e:'⛩️',d:'Trùng tu đền thờ và lễ hội truyền thống bị hư hại sau thiên tai.',pr:'Thợ thủ công đã hoàn thành 1 hạng mục mái ngói, có ảnh nghiệm thu.'}};
+const P=[
+ {id:'p1',cat:'disaster',title:'Nước sạch & bộ sưởi khẩn cấp cho người cao tuổi vùng lũ Noto',org:'Hội Chữ thập đỏ & Liên minh NPO',g:'from-rose-600 to-amber-600',m:99,b:['100% đến hiện trường','Báo cáo AI hàng tuần'],cur:2315000,tgt:2500000,n:4120,def:1000,goal:'hoàn thành 500 bộ sưởi',s:['Chuyện gì? Mưa lớn làm mất điện và nước sạch tại 4 ngôi làng miền núi.','Tiền dùng làm gì? Mua túi sưởi, bình lọc nước di động, thực phẩm khô.','Vì sao gấp? Đêm xuống dưới 5°C, đe dọa sức khỏe người cao tuổi.']},
+ {id:'p2',cat:'children',title:'Bữa tối ấm áp & góc học tập miễn phí cho trẻ em khó khăn',org:'Mạng lưới Kodomo Shokudo',g:'from-amber-500 to-orange-600',m:96,b:['Đã kiểm toán tài chính','Hỗ trợ định kỳ'],cur:1840000,tgt:2000000,n:3290,def:500,goal:'mở thêm 2 điểm bếp mới',s:['Chuyện gì? Giá thực phẩm tăng khiến nhiều gia đình đơn thân thiếu bữa ăn.','Tiền dùng làm gì? Nguyên liệu bữa tối và gia sư tình nguyện kèm bài.','Vì sao gấp? Tránh gián đoạn dinh dưỡng và học tập trong học kỳ mới.']},
+ {id:'p3',cat:'animals',title:'Cứu hộ, tiêm phòng và tìm mái ấm cho chó mèo bị bỏ rơi sau thiên tai',org:'Animal Rescue Japan',g:'from-teal-600 to-emerald-600',m:94,b:['100% đến hiện trường','Cập nhật ảnh thú cưng'],cur:920000,tgt:1000000,n:1850,def:1000,goal:'chi trả đợt phẫu thuật & tiêm phòng',s:['Chuyện gì? Nhiều vật nuôi thất lạc hoặc không thể về cùng chủ ở nơi tạm trú.','Tiền dùng làm gì? Thú y, triệt sản, vaccine, duy trì trại cứu hộ tạm.','Vì sao gấp? Tránh quá tải trước mùa lạnh.']},
+ {id:'p4',cat:'environment',title:'Trồng lại rừng phòng hộ ven biển chống sạt lở tại Tohoku',org:'Green Belt Tohoku',g:'from-emerald-700 to-cyan-700',m:91,b:['Chứng nhận Carbon','GPS từng cây'],cur:1450000,tgt:2000000,n:2110,def:500,goal:'trồng đủ 4,000 cây đợt này',s:['Chuyện gì? Rừng ven biển suy giảm làm tăng nguy cơ xói mòn khi bão đổ bộ.','Tiền dùng làm gì? Ươm cây bản địa, thuê nhân công, gắn thẻ theo dõi.','Vì sao gấp? Phải xuống giống trước mùa mưa để cây kịp bén rễ.']},
+ {id:'p5',cat:'medical',title:'Đội y tế lưu động cho người cao tuổi tại các điểm sơ tán',org:'Japan Medical Aid Network',g:'from-sky-600 to-indigo-600',m:88,b:['Đã kiểm toán tài chính','Bác sĩ có chứng nhận'],cur:610000,tgt:1200000,n:980,def:1000,goal:'vận hành thêm 1 xe y tế',s:['Chuyện gì? Nhiều phòng khám vùng núi vẫn đóng cửa sau thiên tai.','Tiền dùng làm gì? Thuốc thiết yếu, nhiên liệu và nhân sự y tế lưu động.','Vì sao gấp? Bệnh mạn tính của người già dễ nặng thêm khi thiếu thuốc.']},
+ {id:'p6',cat:'culture',title:'Trùng tu đền thờ làng và lễ hội truyền thống sau động đất',org:'Quỹ Di sản Hokuriku',g:'from-purple-700 to-rose-700',m:85,b:['Chứng nhận di sản','Ảnh nghiệm thu'],cur:780000,tgt:1500000,n:1240,def:1000,goal:'hoàn thành phần mái chính',s:['Chuyện gì? Đền thờ thế kỷ 17 bị nứt mái và đổ cổng sau động đất.','Tiền dùng làm gì? Vật liệu gỗ truyền thống và thợ thủ công địa phương.','Vì sao gấp? Cần sửa xong trước mùa tuyết để tránh hư hại thêm.']}];
+const BASE=[
+ {id:'s1',org:'NPO Bảo vệ Mèo Tokyo',short:'Trạm Mèo',em:'🐱',big:'🍲',bg:'from-amber-900 via-slate-800 to-slate-900',t:'2 giờ trước',h:'Nhờ ¥500 của bạn tháng trước, 12 chú mèo hoang có thức ăn ấm suốt mùa đông!',c:'AI đối chiếu hóa đơn 45kg thức ăn với báo cáo tài chính tháng 10. Minh bạch 100%.',cat:'animals'},
+ {id:'s2',org:'Quỹ Phục hồi Rừng Nagano',short:'Rừng Nagano',em:'🌲',big:'🌱',bg:'from-emerald-900 via-teal-900 to-slate-900',t:'Hôm qua',h:'3 cây tuyết tùng mang mã đóng góp của bạn đã bén rễ xanh tốt!',c:'Ảnh vệ tinh và báo cáo kiểm lâm xác nhận tỷ lệ sống 96%.',cat:'environment'},
+ {id:'s3',org:'Bếp ăn Trẻ em Kodomo Shokudo',short:'Kodomo',em:'🍱',big:'😊',bg:'from-rose-900 via-slate-800 to-indigo-950',t:'3 ngày trước',h:'140 suất cơm tối miễn phí đã đến tay các em nhỏ tuần này.',c:'Khoản góp của bạn giúp duy trì nguồn rau sạch từ nông trại địa phương.',cat:'children'},
+ {id:'s4',org:'Đội Cứu hộ Thiên tai Noto',short:'Cứu trợ Noto',em:'⛑️',big:'🚚',bg:'from-slate-800 via-blue-950 to-slate-900',t:'5 ngày trước',h:'Xe chở nước sạch số 04 đã đến xã vùng cao bị chia cắt.',c:'100% ngân sách khẩn cấp được giải ngân trong 24 giờ.',cat:'disaster'}];
+const METHODS=['PayPay','V-Point','Thẻ / Apple Pay'];
+const I18={vi:{passShort:'Hộ chiếu',radar:'[Khẩn cấp] Hỗ trợ tái thiết sau mưa lớn tại Ishikawa & Noto',welcome:'おかえりなさい、Kenji さん',sub:'Những đóng góp nhỏ của bạn đã tạo nên thay đổi thực tế:',pt:'Đừng để điểm thưởng lãng phí!',stories:'Cập nhật từ quỹ bạn đã góp',sim:'Số tiền của bạn sẽ biến thành điều gì?',pick:'Dự án AI chọn riêng cho bạn',tl:'Hành trình đồng tiền của bạn',pass:'Bộ sưu tập Tem Goshuin'},
+ jp:{passShort:'御朱印帳',radar:'【緊急】石川・能登 大雨災害 復興支援募金',welcome:'おかえりなさい、Kenji さん',sub:'あなたの支援が、確かな変化を生み出しています：',pt:'失効間近のポイントで1タップ募金',stories:'支援した団体の最新レポート',sim:'あなたの寄付が形になる瞬間',pick:'AIがおすすめする支援プロジェクト',tl:'あなたの寄付の旅路',pass:'御朱印コレクション'}};
+const KEY='ynb-proto-v2',TGT0=250000;
+const fd=t=>{const x=new Date(t);return x.getFullYear()+'.'+String(x.getMonth()+1).padStart(2,'0')+'.'+String(x.getDate()).padStart(2,'0')};
+function seed(){const d=(m,y)=>new Date(2026,m,y).getTime();return{lang:'vi',pts:340,exp:Date.now()+2.99*864e5,raised:231500,tgt:TGT0,mile:0,pool:0,autoD:true,autoUsed:false,round:true,streak:4,method:'PayPay',
+ don:[{id:1,t:d(10,2),title:'Rừng phòng hộ Tohoku',cat:'environment',amt:1000,stage:3},{id:2,t:d(9,15),title:'Cứu hộ thú cưng sau thiên tai',cat:'animals',amt:750,stage:3},{id:3,t:d(8,9),title:'Bữa tối ấm áp Kodomo Shokudo',cat:'children',amt:2100,stage:3,monthly:true},{id:4,t:d(7,12),title:'Cứu trợ thiên tai Noto',cat:'disaster',amt:1000,stage:3}],
+ st:{disaster:'2026.08',children:'2026.09',animals:'2026.10',environment:'2026.11'},pd:{},viewed:{},extra:[]}}
+function load(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign(seed(),JSON.parse(r))}catch(e){}return seed()}
+let S=load();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const pid=c=>P.find(p=>p.cat===c).id,pj=id=>P.find(p=>p.id===id);
+const units=(c,a)=>Math.floor(a/CATS[c].per);
+const sum=c=>S.don.filter(d=>d.cat===c).reduce((s,d)=>s+units(c,d.amt),0);
+function go(id){$(id).scrollIntoView({behavior:'smooth'})}
+function toast(m){const t=document.createElement('div');t.className='pop pointer-events-auto bg-slate-900 text-white text-sm font-semibold px-4 py-3 rounded-2xl shadow-xl border border-slate-600';t.textContent=m;$('toasts').appendChild(t);setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity=0;setTimeout(()=>t.remove(),300)},4000)}
+
+/* ---------- Core commit ---------- */
+function commit({title,cat,amt,pid:p,method,monthly}){
+ const d={id:Date.now()+Math.random(),t:Date.now(),title,cat,amt,stage:1,monthly:!!monthly,method};
+ S.don.unshift(d);
+ if(cat==='disaster'){S.raised+=amt;if(S.raised>=S.tgt){S.tgt+=TGT0;S.mile++;toast('🎉 Đã đạt mốc cứu trợ! Mốc tiếp theo đã được mở.')}}
+ if(p){const a=S.pd[p]||[0,0];S.pd[p]=[a[0]+amt,a[1]+1]}
+ let ns=false;if(!S.st[cat]){S.st[cat]=fd(Date.now());ns=true}
+ save();renderAll();schedule(d.id);
+ return{d,ns};
+}
+function schedule(id){
+ const d=S.don.find(x=>x.id===id);if(!d||d.stage>=3)return;
+ setTimeout(()=>{d.stage=2;save();renderTl();toast('📦 Khoản góp của bạn đã được giải ngân tới NPO')},6000);
+ setTimeout(()=>{d.stage=3;
+  S.extra.unshift({id:'x'+d.id,org:'Báo cáo AI mới',short:CATS[d.cat].n,em:CATS[d.cat].ic,big:CATS[d.cat].e,bg:'from-indigo-900 via-slate-800 to-rose-950',t:'Vừa xong',h:`${yen(d.amt)} của bạn đã thành ${units(d.cat,d.amt)||1} ${CATS[d.cat].u}!`,c:CATS[d.cat].pr,cat:d.cat});
+  save();renderStories();renderTl();toast('✨ Impact Card mới: xem vòng tròn Story đầu tiên')},12000);
+}
+
+/* ---------- Render ---------- */
+function renderAll(){stats();radar();renderStories();renderProjects();renderTl();renderStamps();pool();toggles();sim(+$('slider').value)}
+function stats(){
+ $('sMeal').textContent=sum('children');$('sTree').textContent=sum('environment');$('sBag').textContent=sum('disaster');
+ $('sYen').textContent=yen(S.don.reduce((s,d)=>s+d.amt,0));
+ $('streak').textContent=`🌱 ${S.streak} tháng liên tiếp • ${S.don.length} lần góp`;
+ const n=Object.keys(S.st).length;$('hStamp').textContent=n;$('pTot').textContent=n;
+ $('pSub').innerHTML=n>=6?'🏅 Bạn đã mở khóa huy hiệu <b>Đại sứ Nhân ái Yahoo!</b> — điểm đóng góp được nhân đôi từ quỹ đối ứng.':`Sưu tầm đủ 6 tem để mở khóa huy hiệu <b>Đại sứ Nhân ái Yahoo!</b> và nhân đôi điểm từ quỹ đối ứng. Còn <b>${6-n}</b> tem.`;
+ $('ptVal').innerHTML=S.pts?`${S.pts} <span class="text-sm text-slate-500">pt (= ${yen(S.pts)})</span>`:`0 <span class="text-sm text-emerald-600">pt (đã góp!)</span>`;
+ $('ptDesc').innerHTML=S.pts?`AI gợi ý dùng <b>${S.pts} điểm</b> sắp hết hạn để tặng <b class="text-yr">${Math.max(1,units('children',S.pts))} bữa ăn nóng</b> cho trẻ em vùng thiên tai.`:'Cảm ơn bạn! Điểm đã được chuyển thành bữa ăn cho trẻ em.';
+ const b=$('sweepBtn');b.disabled=!S.pts;b.className=`w-full font-extrabold py-3.5 rounded-2xl shadow-lg transition ${S.pts?'bg-yr hover:bg-yd text-white active:scale-[.98]':'bg-emerald-600 text-white cursor-default'}`;
+ b.textContent=S.pts?`⚡ Quyên góp 1-Chạm toàn bộ ${S.pts} pt`:'✅ Đã quyên góp thành công';
+}
+function radar(){
+ const rem=S.tgt-S.raised,pc=(S.raised-(S.tgt-TGT0))/TGT0*100;
+ $('radarBar').style.width=pc.toFixed(1)+'%';$('radarPct').textContent=pc.toFixed(1)+'%';
+ $('radarMs').textContent=`🔥 Chỉ còn thiếu ${yen(rem)} để đạt mốc ${100+S.mile*100} túi cứu trợ`;
+}
+function renderStories(){
+ $('stories').innerHTML=L().map((s,i)=>`<button onclick="openStory(${i})" class="flex flex-col items-center gap-2 shrink-0 group" aria-label="Story ${s.org}">
+  <div class="w-16 h-16 rounded-full ring ${S.viewed[s.id]?'v':''} group-hover:scale-105 transition"><div class="w-full h-full rounded-full flex items-center justify-center text-3xl" style="background:var(--card);border:2px solid var(--card)">${s.em}</div></div>
+  <span class="text-xs font-semibold max-w-[84px] truncate ${S.viewed[s.id]?'mut':''}">${s.short}</span></button>`).join('');
+}
+const L=()=>[...S.extra,...BASE];
+function renderProjects(){
+ const f=window.F||'all';
+ $('filters').innerHTML=[['all','Tất cả',P.length],...Object.keys(CATS).map(k=>[k,CATS[k].pill,P.filter(p=>p.cat===k).length])].map(([k,l,n])=>`<button onclick="F='${k}';renderProjects()" class="px-4 py-2 rounded-full text-xs font-bold shrink-0 ${k===f?'bg-slate-900 text-white':'soft'}">${l} (${n})</button>`).join('');
+ $('grid').innerHTML=P.filter(p=>f==='all'||p.cat===f).map(p=>{
+  const a=S.pd[p.id]||[0,0],cur=p.cur+a[0],n=p.n+a[1],pc=Math.min(100,cur/p.tgt*100),rem=p.tgt-cur;
+  return`<article class="card overflow-hidden flex flex-col justify-between">
+  <div><div class="h-40 bg-gradient-to-br ${p.g} p-4 flex flex-col justify-between text-white">
+   <div class="flex justify-between gap-2"><span class="bg-black/35 text-xs font-bold px-3 py-1 rounded-full">${CATS[p.cat].pill}</span><span class="bg-white text-slate-900 text-xs font-extrabold px-3 py-1 rounded-full">✨ AI Match ${p.m}%</span></div>
+   <div class="text-5xl self-center">${CATS[p.cat].e}</div>
+   <div class="flex flex-wrap gap-1.5">${p.b.map(x=>`<span class="bg-white/20 text-[11px] font-semibold px-2.5 py-0.5 rounded-md border border-white/25">✓ ${x}</span>`).join('')}</div></div>
+  <div class="p-5 space-y-3"><div><div class="text-xs mut font-semibold">${p.org}</div><h3 class="font-extrabold leading-snug mt-1">${p.title}</h3></div>
+   <div class="rounded-2xl p-3 bg-indigo-500/10 border border-indigo-400/30">
+    <button onclick="$('sum-${p.id}').classList.toggle('hidden')" class="w-full text-left text-xs font-bold text-indigo-500 flex justify-between"><span>✨ Tóm tắt nhanh bằng AI (30 giây)</span><span>▼</span></button>
+    <ul id="sum-${p.id}" class="hidden mt-2 pt-2 border-t border-indigo-400/30 space-y-1.5 text-xs">${p.s.map(x=>{const [h,...r]=x.split('? ');return`<li>• <b>${h}?</b> ${r.join('? ')}</li>`}).join('')}</ul></div>
+   <div><div class="flex justify-between text-xs gap-2"><b class="text-yr">${pc>=100?'🎉 Đã đạt mục tiêu — cảm ơn bạn!':`Chỉ còn thiếu ${yen(rem)} để ${p.goal}`}</b><span class="font-mono font-bold">${pc.toFixed(1)}%</span></div>
+   <div class="h-2.5 rounded-full overflow-hidden mt-1.5" style="background:var(--soft)"><div class="h-full bg-yr rounded-full transition-all duration-700" style="width:${pc}%"></div></div>
+   <div class="flex justify-between text-[11px] mut mt-1"><span>${yen(cur)} / ${yen(p.tgt)}</span><span>👥 ${n.toLocaleString()} người góp</span></div></div></div></div>
+  <div class="px-5 pb-5"><button onclick="openDonate(pj('${p.id}').title,'${p.cat}',${p.def},'${p.id}')" class="w-full bg-yr hover:bg-yd text-white font-extrabold text-sm py-3 rounded-xl active:scale-[.98] transition">Quyên góp nhanh ${yen(p.def)}</button></div></article>`}).join('');
+}
+function renderTl(){
+ const lab=['Đã nhận','Giải ngân tới NPO','AI xác minh'];
+ $('tlList').innerHTML=S.don.slice(0,6).map(d=>{const c=CATS[d.cat],u=units(d.cat,d.amt)||1;
+  return`<li class="soft rounded-2xl p-4 flex gap-4"><div class="text-3xl">${c.e}</div><div class="flex-1 min-w-0">
+  <div class="flex justify-between gap-2 text-xs mut"><span>${fd(d.t)}${d.monthly?' • 🔁 Hàng tháng':''}</span><b class="text-yr">${yen(d.amt)}</b></div>
+  <div class="font-bold text-sm truncate">${d.title}</div>
+  <div class="text-sm">→ <b>${u} ${c.u}</b></div>
+  <div class="flex gap-1 mt-2">${lab.map((l,i)=>`<div class="flex-1"><div class="h-1.5 rounded-full ${i<d.stage?'bg-emerald-500':'bg-slate-400/40'}"></div><div class="text-[10px] mt-1 ${i<d.stage?'text-emerald-600 font-semibold':'mut'}">${l}</div></div>`).join('')}</div>
+  ${d.stage>=3?`<div class="text-xs mut mt-2">✨ ${c.pr}</div>`:''}</div></li>`}).join('');
+}
+function renderStamps(){
+ $('stamps').innerHTML=Object.keys(CATS).map(k=>{const c=CATS[k],u=S.st[k];
+  return`<div class="rounded-2xl p-4 text-center border ${u?'bg-white/10 border-amber-400/40':'bg-white/5 border-white/10 opacity-50'}">
+  <div class="w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-2 ${u?'bg-rose-500/20 border-2 border-yr text-3xl':'border border-dashed border-slate-500 text-2xl grayscale'}">${c.ic}</div>
+  <div class="text-[11px] font-bold text-amber-300">${c.jp}</div><div class="text-xs font-extrabold">${c.n}</div>
+  <div class="text-[10px] text-slate-400 mt-1">${u?'✓ '+u:'🔒 Góp để mở khóa'}</div></div>`}).join('');
+}
+const pool=()=>$('pool').textContent=yen(S.pool);
+function toggles(){$('tgDis').className='tg'+(S.autoD?' on':'');$('tgRound').className='tg'+(S.round?' on':'')}
+function flip(k){S[k]=!S[k];save();toggles();toast(S[k]?'✅ Đã bật':'Đã tắt')}
+
+/* ---------- Features ---------- */
+function sweep(){if(!S.pts)return;const a=S.pts;S.pts=0;const r=commit({title:'Điểm sắp hết hạn → bữa ăn cho trẻ em vùng thiên tai',cat:'children',amt:a,pid:'p2',method:'Điểm V/PayPay'});toast('🎉 Góp 1-chạm '+a+' pt'+(r.ns?' • +1 tem mới!':' thành công!'))}
+function quake(){
+ if(!S.autoD)return toast('Bạn đã tắt góp tự động khi có thiên tai.');
+ if(S.autoUsed)return toast('Đã dùng hạn mức 1 lần/tháng này.');
+ S.autoUsed=true;$('ticker').textContent='🌋 CẢNH BÁO: động đất M5.8 tại Noto • vừa xong';
+ const r=commit({title:'Góp tự động: động đất M5.8 Noto',cat:'disaster',amt:500,pid:'p1',method:'Auto-pledge'});toast('⚡ AI kích hoạt góp tự động ¥500'+(r.ns?' • +1 tem!':''));
+}
+function pay(){
+ const price=[1280,2465,780,1999,3340][Math.floor(Math.random()*5)];
+ if(!S.round)return toast(`Thanh toán ${yen(price)} — Auto-Roundup đang tắt.`);
+ const r=(100-price%100)%100||100;S.pool+=r;
+ toast(`🛒 ${yen(price)} qua PayPay • làm tròn thêm ${yen(r)}`);
+ if(S.pool>=100){const a=Math.floor(S.pool/100)*100;S.pool-=a;commit({title:'Làm tròn tự động → trồng rừng',cat:'environment',amt:a,pid:'p4',method:'Auto-Roundup'});toast('🌳 Quỹ lẻ đủ ¥100: đã góp trồng cây')}else{save();pool()}
+}
+function sim(v){
+ window.SC=window.SC||'children';const c=CATS[SC],u=units(SC,v);
+ $('simAmt').textContent=yen(v);$('simBtn').textContent=yen(v);$('simPay').textContent=`Thanh toán qua ${S.method} (0 phí)`;
+ $('slider').value=v;
+ $('presets').innerHTML=[300,1500,3000,5000].map(x=>`<button onclick="sim(${x})" class="py-2 rounded-xl text-xs font-bold border ${x===v?'border-yr text-yr bg-rose-500/10':''}" style="${x===v?'':'border-color:var(--bd);background:var(--card)'}">${yen(x)}</button>`).join('');
+ $('simCats').innerHTML=Object.keys(CATS).map(k=>`<button onclick="SC='${k}';sim(${v})" class="px-3 py-1.5 rounded-full text-xs font-bold shrink-0 ${k===SC?'bg-slate-900 text-white':'soft'}">${CATS[k].pill}</button>`).join('');
+ $('simIc').textContent=c.e;
+ $('simT').textContent=u>=1?`${u} ${c.u}`:`Góp thêm ${yen(c.per-v)} để đủ 1 ${c.u}`;
+ $('simD').textContent=c.d;
+ $('simIc').style.transform='scale(1.1)';setTimeout(()=>$('simIc').style.transform='',150);
+ $('payPills').innerHTML=METHODS.map(m=>`<button onclick="S.method='${m}';save();sim(${v})" class="px-3 py-1.5 rounded-lg text-xs font-bold ${m===S.method?'text-yr':'mut'}" style="${m===S.method?'background:var(--card)':''}">${m}</button>`).join('');
+}
+function simDonate(){const v=+$('slider').value;openDonate(`AI Impact: ${CATS[SC].n} — ${units(SC,v)||1} ${CATS[SC].u}`,SC,v,pid(SC))}
+
+/* ---------- Donate modal ---------- */
+let M={};
+function openDonate(title,cat,amt,p){M={title,cat,pid:p,amt};$('dTitle').textContent=title;$('dMon').checked=false;$('dForm').classList.remove('hidden');$('dOk').classList.add('hidden');$('dGo').disabled=false;$('dGo').textContent='Hoàn tất quyên góp';dSet(amt);dPay();$('dm').classList.replace('hidden','flex')}
+function dSet(a){M.amt=a;$('dAmt').value=a||'';const u=units(M.cat,a);
+ $('dPre').innerHTML=[300,1000,3000,5000].map(x=>`<button onclick="dSet(${x})" class="py-1.5 rounded-lg text-xs font-bold border ${x===a?'border-yr text-yr':''}" style="${x===a?'':'border-color:var(--bd);background:var(--card)'}">${yen(x)}</button>`).join('');
+ $('dPrev').textContent=u>=1?`✨ ${yen(a)} ≈ ${u} ${CATS[M.cat].u}`:`Tối thiểu ¥100 • cần ${yen(CATS[M.cat].per)} cho 1 ${CATS[M.cat].u}`}
+function dPay(){$('dPay').innerHTML=METHODS.map(m=>`<button onclick="S.method='${m}';dPay()" class="flex-1 px-2 py-2 rounded-lg text-xs font-bold ${m===S.method?'text-yr':'mut'}" style="${m===S.method?'background:var(--card)':''}">${m}</button>`).join('')}
+function dConfirm(){
+ if(M.amt<100)return toast('Số tiền tối thiểu là ¥100');
+ const b=$('dGo');b.disabled=true;b.textContent='Đang xử lý…';
+ setTimeout(()=>{
+  const mon=$('dMon').checked,r=commit({title:M.title,cat:M.cat,amt:M.amt,pid:M.pid,method:S.method,monthly:mon}),u=units(M.cat,M.amt)||1,n=Object.keys(S.st).length;
+  $('okT').textContent=`Cảm ơn Kenji! ${yen(M.amt)} đã được ghi nhận`;
+  $('okD').textContent=`Khoản góp của bạn ≈ ${u} ${CATS[M.cat].u}. ${mon?'Đã đặt lịch góp hàng tháng. ':''}Bạn sẽ nhận Impact Card khi tiền tới hiện trường.`;
+  $('okS').textContent=r.ns?`💮 Tem mới: ${CATS[M.cat].jp}! (${n}/6)`:n>=6?'🏅 Bạn đã đủ 6/6 tem — Đại sứ Nhân ái!':`Tem ${CATS[M.cat].jp} đã có • còn ${6-n} tem nữa để hoàn thành hộ chiếu`;
+  const nx=P.find(p=>!S.st[p.cat])||P.find(p=>p.cat!==M.cat);
+  $('okN').textContent=nx.title;$('okNb').onclick=()=>openDonate(nx.title,nx.cat,nx.def,nx.id);
+  $('dForm').classList.add('hidden');$('dOk').classList.remove('hidden');
+ },700);
+}
+function closeDonate(){$('dm').classList.replace('flex','hidden')}
+function shareIt(){const t=`Mình vừa góp ${yen(M.amt)} trên Yahoo!ネット募金 💮`;try{navigator.clipboard.writeText(t).then(()=>toast('Đã sao chép nội dung chia sẻ'),()=>toast(t))}catch(e){toast(t)}}
+
+/* ---------- Story viewer ---------- */
+let si=0,st=0,stm;
+function openStory(i){si=i;st=0;showStory();$('sm').classList.replace('hidden','flex');clearInterval(stm);
+ stm=setInterval(()=>{st+=50;if(st>=5000)stepStory(1);else seg()},50)}
+function showStory(){const s=L()[si];S.viewed[s.id]=1;save();renderStories();
+ $('sEm').textContent=s.em;$('sOrg').textContent=s.org;$('sDate').textContent='AI cập nhật • '+s.t;$('sBig').textContent=s.big;$('sHead').textContent=s.h;$('sCap').textContent=s.c;
+ $('sVis').className=`min-h-[22rem] flex flex-col items-center justify-center px-8 pt-28 pb-8 text-center relative bg-gradient-to-br ${s.bg}`;seg()}
+function seg(){$('seg').innerHTML=L().map((_,i)=>`<div class="flex-1 h-1 rounded-full bg-white/30 overflow-hidden"><div class="h-full bg-white" style="width:${i<si?100:i===si?st/50:0}%"></div></div>`).join('')}
+function stepStory(d){st=0;const n=si+d;if(n<0||n>=L().length)return d>0?closeStory():seg();si=n;showStory()}
+function closeStory(){clearInterval(stm);$('sm').classList.replace('flex','hidden')}
+function storyDonate(){const s=L()[si];closeStory();openDonate(s.org,s.cat,500,pid(s.cat))}
+
+/* ---------- Misc ---------- */
+function toggleLang(){S.lang=S.lang==='vi'?'jp':'vi';save();lang()}
+/* ---------- JP translator: dịch toàn bộ text động/tĩnh khi ở chế độ JP ---------- */
+const JR=[
+[/Chỉ còn thiếu (¥[\d,]+) để đạt mốc (\d+) túi cứu trợ/g,'救援バッグ$2個の目標まであと$1'],
+[/Chỉ còn thiếu (¥[\d,]+) để (.+)/g,'$2まであと$1'],
+[/(\d+) túi cứu trợ/g,'救援バッグ$1個'],[/(\d+) bữa ăn nóng/g,'温かい食事$1食分'],[/(\d+) suất chăm sóc thú/g,'動物ケア$1回分'],[/(\d+) cây giống/g,'苗木$1本'],[/(\d+) bộ thuốc & khám/g,'医薬品・診察$1セット'],[/(\d+) giờ trùng tu/g,'修復$1時間分'],
+[/(\d+) tháng liên tiếp • (\d+) lần góp/g,'$1ヶ月連続 • $2回寄付'],
+[/(\d+) điểm/g,'$1ポイント'],[/(\d+) giờ trước/g,'$1時間前'],[/(\d+) ngày trước/g,'$1日前'],[/(\d+) phút trước/g,'$1分前'],
+[/Quyên góp 1-Chạm toàn bộ (\d+) pt/g,'$1 ptを1タップで全額寄付'],
+[/Góp 1-chạm (\d+) pt/g,'$1 ptを1タップで寄付'],
+[/Hết hạn sau (\d+) ngày (\S+)/g,'残り$1日 $2'],
+[/Thanh toán qua (.+) \(0 phí\)/g,'$1で支払い（手数料0円）'],
+[/Góp thêm (¥[\d,]+) để đủ (.+)/g,'あと$1で$2分'],
+[/Tối thiểu ¥100 • cần (¥[\d,]+) cho (.+)/g,'最低¥100 • $2には$1が必要'],
+[/(¥[\d,]+) của bạn đã thành (.+)!/g,'あなたの$1が$2になりました！'],
+[/Cảm ơn Kenji! (¥[\d,]+) đã được ghi nhận/g,'Kenjiさん、ありがとうございます！$1を受け付けました'],
+[/Tem mới: (.+)! \((\d)\/6\)/g,'新しいスタンプ：$1！（$2/6）'],
+[/Tem (.+) đã có • còn (\d+) tem nữa để hoàn thành hộ chiếu/g,'$1スタンプ取得済み • 御朱印帳の完成まであと$2個'],
+[/🛒 (¥[\d,]+) qua PayPay • làm tròn thêm (¥[\d,]+)/g,'🛒 PayPayで$1 • 端数$2を追加'],
+[/Thanh toán (¥[\d,]+) — Auto-Roundup đang tắt\./g,'$1のお支払い — Auto-Roundupはオフです。'],
+[/Mình vừa góp (¥[\d,]+) trên (.+)/g,'$2で$1を寄付しました']
+];
+const JD=Object.entries({
+'Đang kết nối dữ liệu khí tượng…':'気象データに接続中…','Dữ liệu khí tượng • cập nhật ':'気象データ • 更新：','Xóa dữ liệu demo':'デモデータを削除','PayPay đã liên kết':'PayPay連携済み',
+'Bật tắt góp tự động':'自動寄付の切替','Bật tắt làm tròn':'端数寄付の切替','Đóng':'閉じる','Trước':'前へ','Sau':'次へ',
+'Góp khẩn cấp ¥1,000 →':'緊急寄付 ¥1,000 →',
+'🍱 Bữa ăn':'🍱 食事','🌲 Cây trồng':'🌲 植樹','⛺ Túi cứu trợ':'⛺ 救援バッグ','❤️ Tổng góp':'❤️ 合計寄付額',
+'Điểm khả dụng':'利用可能ポイント','pt (đã góp!)':'pt（寄付済み！）',
+'AI gợi ý dùng ':'AIのおすすめ：',' sắp hết hạn để tặng ':'（失効間近）で ',' cho trẻ em vùng thiên tai.':'を被災地の子どもたちへ。',
+'Cảm ơn bạn! Điểm đã được chuyển thành bữa ăn cho trẻ em.':'ありがとうございます！ポイントが子どもたちの食事になりました。',
+'✅ Đã quyên góp thành công':'✅ 寄付が完了しました','Đã sử dụng hết':'使い切りました',
+'Không cần nhập thẻ • Nhận tem Goshuin vào Hộ chiếu':'カード入力不要 • 御朱印スタンプを獲得',
+'AI tổng hợp ảnh & báo cáo thực địa từ các NPO • Vòng màu = chưa xem':'AIがNPOの現地写真・レポートを集約 • 色付きの輪＝未読',
+'Mức quyên góp':'寄付額','Tác động ước tính bởi AI':'AIが推定する効果','Quyên góp ngay ':'今すぐ寄付 ','Thẻ / Apple Pay':'カード / Apple Pay',
+'Dựa trên khu vực & lịch sử góp của bạn':'地域とあなたの寄付履歴に基づく','Tất cả':'すべて',
+'✨ Tóm tắt nhanh bằng AI (30 giây)':'✨ AIで要約（30秒）','🎉 Đã đạt mục tiêu — cảm ơn bạn!':'🎉 目標達成 — ありがとうございます！','người góp':'人が寄付','Quyên góp nhanh ':'すぐに寄付 ',
+'Chuyện gì?':'何が起きている？','Tiền dùng làm gì?':'お金の使い道は？','Vì sao gấp?':'なぜ急ぐ？',
+'🚨 Thiên tai':'🚨 災害','🎒 Trẻ em':'🎒 こども','🐾 Động vật':'🐾 動物','🌲 Môi trường':'🌲 環境','🩺 Y tế':'🩺 医療','🏮 Văn hóa':'🏮 文化',
+'Thiên tai':'災害','Trẻ em':'こども','Thú cưng':'ペット','Rừng xanh':'森林','Y tế':'医療','Di sản':'文化遺産',
+'túi cứu trợ':'救援バッグ','bữa ăn nóng':'温かい食事','suất chăm sóc thú':'動物ケア','cây giống':'苗木','bộ thuốc & khám':'医薬品・診察セット','giờ trùng tu':'修復時間',
+'Mỗi túi gồm chăn giữ nhiệt, đèn pin mặt trời, nước lọc dùng 7 ngày.':'各バッグに保温ブランケット、ソーラーライト、7日分の飲料水が入っています。',
+'Mỗi túi':'各バッグ','Chuyển thẳng đến bếp ăn cộng đồng Kodomo Shokudo đã được kiểm toán.':'監査済みのこども食堂の食事支援に直接送金されます。',
+'Gồm thức ăn, tiêm phòng và chỗ ở tạm cho thú bị bỏ rơi.':'エサ、ワクチン、一時的な住まいを含む保護動物ケアです。',
+'Mỗi cây gắn mã GPS để theo dõi sinh trưởng trên Timeline.':'1本ごとにGPSコードが付き、Timelineで成長を確認できます。',
+'Cung cấp thuốc thiết yếu và khám lưu động cho người cao tuổi.':'必須医薬品と高齢者への移動診療を提供します。',
+'Trùng tu đền thờ và lễ hội truyền thống bị hư hại sau thiên tai.':'被災した神社や伝統行事の修復に充てられます。',
+'Xe tiếp tế đã đến điểm sơ tán, ảnh GPS khớp báo cáo.':'補給車が避難所に到着。GPS写真が報告と一致しました。',
+'AI đối chiếu hóa đơn rau sạch với báo cáo tháng, khớp 100%.':'AIが野菜の領収書と月次報告を照合し、100%一致しました。',
+'12 thú cưng đã được tiêm phòng, ảnh trước/sau được xác minh.':'12匹にワクチン接種済み。ビフォーアフター写真を検証しました。',
+'Ảnh vệ tinh xác nhận tỷ lệ sống của cây đạt 96%.':'衛星画像で苗木の生存率96%を確認しました。',
+'Đội y tế lưu động đã khám cho 38 người tại điểm sơ tán.':'移動診療チームが避難所で38人を診察しました。',
+'Thợ thủ công đã hoàn thành 1 hạng mục mái ngói, có ảnh nghiệm thu.':'職人が瓦屋根1か所を完成。検収写真があります。',
+'Nước sạch & bộ sưởi khẩn cấp cho người cao tuổi vùng lũ Noto':'能登の水害被災地の高齢者へ、緊急用の飲料水と暖房を','Hội Chữ thập đỏ & Liên minh NPO':'赤十字社・NPO救援連合',
+'Bữa tối ấm áp & góc học tập miễn phí cho trẻ em khó khăn':'困難を抱える子どもたちに、温かい夕食と無料の学習スペースを','Mạng lưới Kodomo Shokudo':'全国こども食堂ネットワーク',
+'Cứu hộ, tiêm phòng và tìm mái ấm cho chó mèo bị bỏ rơi sau thiên tai':'被災後に保護された犬猫の救護・ワクチン接種・里親探し',
+'Trồng lại rừng phòng hộ ven biển chống sạt lở tại Tohoku':'東北の海岸防災林を再生し、土砂災害を防ぐ',
+'Đội y tế lưu động cho người cao tuổi tại các điểm sơ tán':'避難所の高齢者を支える移動診療チーム',
+'Trùng tu đền thờ làng và lễ hội truyền thống sau động đất':'地震で被災した村の神社と伝統行事の修復','Quỹ Di sản Hokuriku':'北陸文化遺産財団',
+'100% đến hiện trường':'100%現地へ届く','Báo cáo AI hàng tuần':'AIによる週次レポート','Đã kiểm toán tài chính':'財務監査済み','Hỗ trợ định kỳ':'継続支援','Cập nhật ảnh thú cưng':'保護動物の写真更新','Chứng nhận Carbon':'カーボン認証','GPS từng cây':'1本ごとのGPS記録','Bác sĩ có chứng nhận':'医師免許確認済み','Chứng nhận di sản':'文化財認定','Ảnh nghiệm thu':'検収写真',
+'hoàn thành 500 bộ sưởi':'暖房500セットの完成','mở thêm 2 điểm bếp mới':'新しい食堂2か所の開設','chi trả đợt phẫu thuật & tiêm phòng':'手術・ワクチン費用の達成','trồng đủ 4,000 cây đợt này':'今期4,000本の植樹達成','vận hành thêm 1 xe y tế':'診療車1台の追加運行','hoàn thành phần mái chính':'主屋根の修復完了',
+'Mưa lớn làm mất điện và nước sạch tại 4 ngôi làng miền núi.':'大雨で山間部4集落が停電・断水しています。','Mua túi sưởi, bình lọc nước di động, thực phẩm khô.':'カイロ、携帯用浄水器、乾燥食品を購入します。','Đêm xuống dưới 5°C, đe dọa sức khỏe người cao tuổi.':'夜間は5℃を下回り、高齢者の健康が危険です。',
+'Giá thực phẩm tăng khiến nhiều gia đình đơn thân thiếu bữa ăn.':'物価高で、ひとり親家庭の食事が不足しています。','Nguyên liệu bữa tối và gia sư tình nguyện kèm bài.':'夕食の食材と、ボランティア講師による学習支援。','Tránh gián đoạn dinh dưỡng và học tập trong học kỳ mới.':'新学期の栄養と学習が途切れないようにするため。',
+'Nhiều vật nuôi thất lạc hoặc không thể về cùng chủ ở nơi tạm trú.':'多くのペットが迷子になったり、避難所で飼い主と暮らせずにいます。','Thú y, triệt sản, vaccine, duy trì trại cứu hộ tạm.':'獣医診療、不妊手術、ワクチン、仮設保護施設の運営。','Tránh quá tải trước mùa lạnh.':'寒い季節の前に施設の過密を防ぐため。',
+'Rừng ven biển suy giảm làm tăng nguy cơ xói mòn khi bão đổ bộ.':'海岸林の減少で、台風時の土壌流出リスクが高まっています。','Ươm cây bản địa, thuê nhân công, gắn thẻ theo dõi.':'在来種の育苗、植樹の人件費、生育追跡タグの設置。','Phải xuống giống trước mùa mưa để cây kịp bén rễ.':'雨季前に植えて、根付く時間を確保するため。',
+'Nhiều phòng khám vùng núi vẫn đóng cửa sau thiên tai.':'被災後も山間部の多くの診療所が休業しています。','Thuốc thiết yếu, nhiên liệu và nhân sự y tế lưu động.':'必須医薬品、燃料、移動診療スタッフの人件費。','Bệnh mạn tính của người già dễ nặng thêm khi thiếu thuốc.':'薬が不足すると高齢者の持病が悪化しやすいため。',
+'Đền thờ thế kỷ 17 bị nứt mái và đổ cổng sau động đất.':'17世紀の神社が地震で屋根にひびが入り、門が倒壊しました。','Vật liệu gỗ truyền thống và thợ thủ công địa phương.':'伝統的な木材と地元の職人の人件費。','Cần sửa xong trước mùa tuyết để tránh hư hại thêm.':'雪の季節前に修復して、被害の拡大を防ぐため。',
+'NPO Bảo vệ Mèo Tokyo':'東京猫保護NPO','Quỹ Phục hồi Rừng Nagano':'長野森林再生基金','Bếp ăn Trẻ em Kodomo Shokudo':'こども食堂','Đội Cứu hộ Thiên tai Noto':'能登災害救援隊',
+'Trạm Mèo':'猫の駅','Rừng Nagano':'長野の森','Kodomo':'こども食堂','Cứu trợ Noto':'能登救援','Báo cáo AI mới':'AIの新着レポート',
+'Hôm qua':'昨日','Vừa xong':'たった今','vừa xong':'たった今','AI cập nhật • ':'AI更新 • ',
+'Nhờ ¥500 của bạn tháng trước, 12 chú mèo hoang có thức ăn ấm suốt mùa đông!':'先月のあなたの¥500で、12匹の野良猫が冬の間ずっと温かいごはんを食べられます！',
+'AI đối chiếu hóa đơn 45kg thức ăn với báo cáo tài chính tháng 10. Minh bạch 100%.':'AIが45kg分の餌の領収書を10月の財務報告と照合しました。透明性100%。',
+'3 cây tuyết tùng mang mã đóng góp của bạn đã bén rễ xanh tốt!':'あなたの寄付コードが付いた杉3本が、しっかり根付きました！','Ảnh vệ tinh và báo cáo kiểm lâm xác nhận tỷ lệ sống 96%.':'衛星画像と森林管理官の報告で、生存率96%を確認。',
+'140 suất cơm tối miễn phí đã đến tay các em nhỏ tuần này.':'今週、140食の無料夕食が子どもたちに届きました。','Khoản góp của bạn giúp duy trì nguồn rau sạch từ nông trại địa phương.':'あなたの寄付が、地元農家からの新鮮な野菜の確保を支えています。',
+'Xe chở nước sạch số 04 đã đến xã vùng cao bị chia cắt.':'給水車4号が、孤立した山間の集落に到着しました。','100% ngân sách khẩn cấp được giải ngân trong 24 giờ.':'緊急予算の100%が24時間以内に支出されました。',
+'Rừng phòng hộ Tohoku':'東北の防災林','Cứu hộ thú cưng sau thiên tai':'被災後のペット救護','Bữa tối ấm áp Kodomo Shokudo':'こども食堂の温かい夕食','Cứu trợ thiên tai Noto':'能登災害救援',
+'Điểm sắp hết hạn → bữa ăn cho trẻ em vùng thiên tai':'失効間近ポイント → 被災地の子どもの食事','Góp tự động: động đất M5.8 Noto':'自動寄付：能登 M5.8地震','Làm tròn tự động → trồng rừng':'自動端数寄付 → 植林','Cứu trợ khẩn cấp mưa lớn Ishikawa & Noto':'石川・能登 大雨 緊急救援',
+'🔁 Hàng tháng':'🔁 毎月','Đã nhận':'受付済み','Giải ngân tới NPO':'NPOへ送金','AI xác minh':'AI検証',
+'My Impact Timeline • Khoản góp mới sẽ tự cập nhật trạng thái sau vài giây (demo)':'My Impact Timeline • 新しい寄付は数秒後に自動で状況が更新されます（デモ）',
+'Sưu tầm đủ 6 tem để mở khóa huy hiệu ':'6つ集めるとバッジ「','🏅 Bạn đã mở khóa huy hiệu ':'🏅 バッジ「','Đại sứ Nhân ái Yahoo!':'Yahoo!思いやり大使',
+' và nhân đôi điểm từ quỹ đối ứng. Còn ':'」を解放し、マッチング基金でポイント2倍に。残り',' tem.':'個。',' — điểm đóng góp được nhân đôi từ quỹ đối ứng.':'」を解放済み — マッチング基金でポイント2倍。',
+'Góp để mở khóa':'寄付で解放',
+'⚡ Góp tự động khi có thiên tai':'⚡ 災害時に自動寄付','Tự góp ¥500 khi AI cảnh báo động đất/bão lớn (tối đa 1 lần/tháng)':'AIが大地震・大型台風を警告したら¥500を自動寄付（月1回まで）',
+'🌋 Giả lập cảnh báo động đất M5.8':'🌋 M5.8地震警報をシミュレート','🪙 Làm tròn tự động (Auto-Roundup)':'🪙 自動端数寄付（Auto-Roundup）',
+'Góp phần lẻ lên ¥100 mỗi lần thanh toán PayPay. Quỹ lẻ: ':'PayPay決済のたびに¥100まで端数を寄付。端数プール：','🛒 Giả lập thanh toán PayPay':'🛒 PayPay決済をシミュレート',
+'Tác động từ khoản góp của bạn':'あなたの寄付の成果','Tiếp tục ủng hộ quỹ này ¥500':'この基金を続けて支援 ¥500',
+'Xác nhận quyên góp':'寄付の確認','Dự án nhận hỗ trợ':'支援先プロジェクト','Số tiền (¥)':'金額（¥）','Phương thức thanh toán':'お支払い方法','Biến thành quyên góp hàng tháng':'毎月の寄付にする',
+'Hủy bất cứ lúc nào • Nhận Impact Card mỗi tháng':'いつでも解約OK • 毎月Impact Cardが届きます','Hoàn tất quyên góp':'寄付を完了する','Đang xử lý…':'処理中…',
+'Khoản góp của bạn ≈ ':'あなたの寄付は約 ','. Đã đặt lịch góp hàng tháng':'。毎月の寄付を予約済み','. Bạn sẽ nhận Impact Card khi tiền tới hiện trường.':'。お金が現地に届くとImpact Cardが届きます。',
+'🏅 Bạn đã đủ 6/6 tem — Đại sứ Nhân ái!':'🏅 6/6スタンプ達成 — 思いやり大使！','✨ AI gợi ý tiếp theo':'✨ AIの次のおすすめ','Xem dự án →':'プロジェクトを見る →','🔗 Chia sẻ':'🔗 シェア','Xem hành trình':'旅路を見る',
+'✅ Đã bật':'✅ オンにしました','Đã tắt':'オフにしました','🎉 Đã đạt mốc cứu trợ! Mốc tiếp theo đã được mở.':'🎉 救援目標を達成！次の目標が解放されました。',
+'📦 Khoản góp của bạn đã được giải ngân tới NPO':'📦 あなたの寄付がNPOへ送金されました','✨ Impact Card mới: xem vòng tròn Story đầu tiên':'✨ 新しいImpact Card：先頭のStoryをご覧ください',
+' • +1 tem mới!':' • 新しいスタンプ獲得！',' thành công!':' 完了！',' • +1 tem!':' • スタンプ獲得！',
+'Bạn đã tắt góp tự động khi có thiên tai.':'災害時の自動寄付はオフになっています。','Đã dùng hạn mức 1 lần/tháng này.':'今月の上限（月1回）に達しています。','🌋 CẢNH BÁO: động đất M5.8 tại Noto':'🌋 警報：能登でM5.8の地震',
+'⚡ AI kích hoạt góp tự động ¥500':'⚡ AIが自動寄付¥500を実行','🌳 Quỹ lẻ đủ ¥100: đã góp trồng cây':'🌳 端数が¥100に達しました：植林に寄付済み','Số tiền tối thiểu là ¥100':'最低金額は¥100です',
+'Đã sao chép nội dung chia sẻ':'シェア内容をコピーしました','Đã reset dữ liệu demo':'デモデータをリセットしました',
+'vừa góp ':'が寄付 ','Osaka':'大阪','Sendai':'仙台','Fukuoka':'福岡','Nagoya':'名古屋','Sapporo':'札幌','Yuki':'ゆき','Haruto':'はると','Mei':'めい','Sora':'そら','Aoi':'あおい'
+}).sort((a,b)=>b[0].length-a[0].length);
+const jp=s=>{for(const[r,t]of JR)s=s.replace(r,t);for(const[k,t]of JD)s=s.split(k).join(t);return s};
+const OR=new Map(),OA=[];let OB=null;
+function tnode(n){const v=n.nodeValue;if(!v||!/\S/.test(v))return;const t=jp(v);if(t!==v){if(!OR.has(n))OR.set(n,v);n.nodeValue=t}}
+function tel(el){
+ if(el.nodeType===3)return tnode(el);
+ if(el.nodeType!==1||/^(SCRIPT|STYLE)$/.test(el.nodeName))return;
+ const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,{acceptNode:n=>/^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}),a=[];let n;while(n=w.nextNode())a.push(n);a.forEach(tnode);
+ [el,...el.querySelectorAll('[aria-label],[title]')].forEach(e=>['aria-label','title'].forEach(k=>{const v=e.getAttribute(k);if(v){const t=jp(v);if(t!==v){OA.push([e,k,v]);e.setAttribute(k,t)}}}));
+}
+function startOB(){const o={childList:true,subtree:true,characterData:true};OB=new MutationObserver(ms=>{OB.disconnect();ms.forEach(m=>m.type==='characterData'?tnode(m.target):m.addedNodes.forEach(tel));OB.observe(document.body,o)});OB.observe(document.body,o)}
+function lang(){
+ const j=S.lang==='jp',d=I18[S.lang];
+ if(OB){OB.disconnect();OB=null}
+ OR.forEach((v,n)=>{if(n.isConnected)n.nodeValue=v});OR.clear();
+ OA.forEach(([e,k,v])=>{if(e.isConnected)e.setAttribute(k,v)});OA.length=0;
+ $('langBtn').textContent=j?'日本語':'VI + JP';document.documentElement.lang=j?'ja':'vi';
+ document.querySelectorAll('[data-i]').forEach(e=>e.textContent=d[e.dataset.i]);
+ if(j){tel(document.body);startOB()}
+}
+function resetDemo(){try{localStorage.removeItem(KEY)}catch(e){}S=seed();window.F='all';lang();renderAll();toast('Đã reset dữ liệu demo')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeStory();closeDonate()}});
+const NAMES=['Yuki (Osaka)','Haruto (Sendai)','Mei (Fukuoka)','Sora (Nagoya)','Aoi (Sapporo)'];
+let tk=0;setInterval(()=>{if(S.autoUsed&&tk===0){tk++;return}const a=[300,500,1000,2000][Math.floor(Math.random()*4)];$('ticker').textContent=`${NAMES[Math.floor(Math.random()*5)]} vừa góp ${yen(a)} • ${1+Math.floor(Math.random()*4)} phút trước`},4500);
+setInterval(()=>{if(!S.pts)return($('cd').textContent='Đã sử dụng hết');let r=Math.max(0,S.exp-Date.now());const d=Math.floor(r/864e5),h=Math.floor(r%864e5/36e5),m=Math.floor(r%36e5/6e4),s=Math.floor(r%6e4/1e3),z=x=>String(x).padStart(2,'0');$('cd').textContent=`Hết hạn sau ${d} ngày ${z(h)}:${z(m)}:${z(s)}`},1000);
+window.F='all';window.SC='children';
+lang();renderAll();S.don.filter(d=>d.stage<3).forEach(d=>schedule(d.id));
+$('ticker').textContent='Dữ liệu khí tượng • cập nhật 4 phút trước';
+</script>
+</body>
+</html>
